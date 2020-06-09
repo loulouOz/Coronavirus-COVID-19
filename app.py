@@ -24,6 +24,7 @@ from scipy import optimize
 import json
 from collections import Counter
 
+
 d = pd.read_csv('./all_cases.csv',engine='c')
 proj = pd.read_csv('./all_cases_projections.csv',engine='c')
 
@@ -48,32 +49,53 @@ diccy = {}
 for i,j in zip(dfy['iso'],dfy['COUNTRY']):
     diccy[i] = j
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__) 
 
 app.index_string = """<!DOCTYPE html>
 <html lang="en">
     <head>
-        <link rel="preload" type="text/css" href="./assets/lou.css" as="style">
-        <link rel="stylesheet" type="text/css" href="./assets/lou.css" async>
+        <link rel="preload" type="text/css" href="https://virus-corona.herokuapp.com/assets/lou.css" as="style">
+        <link rel="stylesheet" type="text/css" href="https://virus-corona.herokuapp.com/assets/lou.css" async>
         
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta charset="UTF-8">
-        <title>Coronavirus COVID-19</title>
-        <meta name="description" content="Comprehensive overview of the progression of Coronavirus COVID-19 spread over time. Interactive Map of cases available for every country/state impacted, time series evolution, daily new cases by country with history, cumulative view of the coronavirus spread also with history. Modelling and forecasting of the spread. virus-corona heroku by: Louis du Plessis.">
+        <title>COVID-19 Dashboard - Analytics & Forecasting</title>
+        <meta name="description" content="Comprehensive overview of the progression of Coronavirus COVID-19 spread. Interactive dashboard with timeseries evolution, daily new cases, modelling and forecasting. Made by Louis du Plessis de Grenedan.">
+        <meta name="keywords" content="coronavirus, covid-19, covid19, latest numbers, cumulative cases, daily cases, forecasting, John Hopkins University">
+        <h1 style="font-size: 2px; color: #e5ebf0; margin: 0px;">Latest numbers coronavirus, covid-19 interactive dashboard, coronavirus forecasting</h1>
+        <h1 style="font-size: 2px; color: #e5ebf0; margin: 0px;">cumulative numbers, daily numbers, COVID-19 dashboard, social distancing, https://plotly.com/dash/</h1>
         <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
         <!-- <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
         <link rel="dns-prefetch" href="https://api.mapbox.com" async> -->
         <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
         <link rel="dns-prefetch" href="https://www.google-analytics.com" async>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <link rel="canonical" href="https://virus-corona.herokuapp.com/" />
+        <link rel="alternate" href="http://virus-corona.herokuapp.com/" />
         
-        <!-- PUT THE GOOGLE ANALYTICS TAG HERE -->
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-96145197-2"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
 
+            gtag('config', 'UA-96145197-2');
+        </script>
     </head>
     <body>
         {%app_entry%}
         <footer>
             {%config%}
+            
+            <link rel="prefetch" href="/_dash-component-suites/dash_renderer/polyfill@7.v1_2_2m1591666322.7.0.min.js" as="script"/>
+            <link rel="prefetch" href="/_dash-component-suites/dash_renderer/react@16.v1_2_2m1591666322.8.6.min.js" as="script"/>
+            <link rel="prefetch" href="/_dash-component-suites/dash_renderer/react-dom@16.v1_2_2m1591666322.8.6.min.js" as="script"/>
+            <link rel="prefetch" href="/_dash-component-suites/dash_renderer/prop-types@15.v1_2_2m1591666322.7.2.min.js" as="script"/>
+            <link rel="prefetch" href="/_dash-component-suites/dash_core_components/dash_core_components.v1_8_1m1591666322.min.js" as="script"/>
+            <!-- <link rel="prefetch" href="/_dash-component-suites/dash_core_components/dash_core_components-shared.v1_8_1m1591666322.js" as="script"/> -->
+            <link rel="prefetch" href="/_dash-component-suites/dash_html_components/dash_html_components.v1_0_2m1591666322.min.js" as="script"/>
+            <link rel="prefetch" href="/_dash-component-suites/dash_renderer/dash_renderer.v1_2_2m1591666322.min.js" as="script"/>
+        
             {%scripts%}
             {%renderer%}
             <link rel="apple-touch-icon" href="./assets/logoA.png" async>
@@ -88,15 +110,16 @@ server = app.server
 
 app.config.suppress_callback_exceptions = True
 
-tab_style = {'borderBottom': '1px solid #d6d6d6','padding': '6px','backgroundColor': '#FFFFFF'} #'fontWeight': 'bold',
+tab_style = {'borderBottom': '1px solid #d6d6d6','backgroundColor': '#FFFFFF','padding': '3px'}
 
-tab_selected_style = {'borderTop': '1px solid #d6d6d6','borderBottom': '1px solid #d6d6d6','backgroundColor': '#119DFF','color': 'white','padding': '6px'}
+tab_selected_style = {'borderTop': '1px solid #d6d6d6','borderBottom': '1px solid #d6d6d6','backgroundColor': '#119DFF','color': 'white','padding': '3px'}
+
 
 app.layout = html.Div([
                 dcc.Store(id='dropdown-cache', data='initial value'),
                 dcc.Store(id='dropdown1-cache', data='initial value'),
                 dcc.Store(id='dropdown2-cache', data='initial value'),
-
+    
                 dcc.Tabs(id='tabs',value='tab-0', style={'top':'7px','height': '35px','position': 'fixed','width': '99%','z-index': '9999999'}, children=[
                                
             ############################################
@@ -108,9 +131,9 @@ app.layout = html.Div([
                                 'width': '100%','backgroundColor': '#D8E0E5','margin-bottom': '7px'}),                                                          
                             
                 html.Div([
-                    html.Img(alt="logo", src='data:image/png;base64,{}'.format(base64.b64encode(open('logo.png', 'rb').read()).decode()),
+                    html.Img(alt="coronavirus covid-19", src='data:image/png;base64,{}'.format(base64.b64encode(open('logo.png', 'rb').read()).decode()),
                              style={'margin-left':'7px','width': '40px','height': '40px','vertical-align': 'middle','margin-top':'80px','display': 'inline-block'}),                                             
-                    html.H1('Map of COVID-19 Cases',style={'vertical-align': 'middle','display': 'inline-block','margin-left':'7px', 'color':'black','margin-top':'95px'}),
+                    html.H1('COVID-19 - Analytics & Forecasting',style={'vertical-align': 'middle','display': 'inline-block','margin-left':'7px', 'color':'black','margin-top':'95px'}),
                         ],style={'display': 'inline-block','vertical-align': 'middle','margin-bottom':'10px'}),
                                                              
                                                                      
@@ -125,8 +148,8 @@ app.layout = html.Div([
                 JHU will not provide recovered cases at state level for the US as there is no reliable data source reporting recovered cases. (only recovered for the US overall will be displayed)    
 
                 _*Use mouse (or finger on mobile) and highlight/select a region in the graphs to zoom into details. Double tap on graph to reset your action._  
-                _*For best viewing experience, please use Chrome or Firefox._  
-                ''',style={'margin-top': '0px','margin-bottom':'5px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                                                      
+                _*For best viewing experience, please use Chrome or Firefox._
+                ''',style={'margin-top': '0px','margin-bottom':'0px','margin-left': '7px','margin-right': '7px','vertical-align': 'middle'}),                                                      
                 
                 ###############                                                     
                     html.A([html.Img(id='body-image1', alt="news covid19", src='data:image/png;base64,{}'.format(base64.b64encode(open('virus.png', 'rb').read()).decode()),
@@ -136,7 +159,7 @@ app.layout = html.Div([
     
                             
                 html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
-                                'backgroundColor': '#D8E0E5','margin-top': '10px','margin-bottom': '10px'}),                                                      
+                                'backgroundColor': '#D8E0E5','margin-top': '0px','margin-bottom': '5px'}),                                                      
                                                                                    
                 dcc.Dropdown(id='country',style={'width': '32.5%','margin-bottom': '4px','display': 'inline-block','position': 'fixed','left':'8px','top':'50px','background':'lightgrey',
                                                  'color':'black','z-index': '9999999'},multi=True,placeholder="Select a country..."),
@@ -153,14 +176,14 @@ app.layout = html.Div([
                         ],id='test',style={'margin-top': '10px','margin-left': '7px','display': 'inline-block', 'vertical-align': 'top','width': '21%'}),
                                                                      
                                                                      
-                html.Div([dcc.Graph(id='map1', style={'height': 240,'margin-top': '0px'}),
-                          dcc.Graph(id='graph1', style={'height': 230,'margin-top': '10px'})],
+                html.Div([dcc.Graph(id='map1', style={'height': 240,'margin-top': '0px'},className='textpoint'),
+                          dcc.Graph(id='graph1', style={'height': 230,'margin-top': '10px'},className='textpoint')],
                          id='test1',style={'margin-left': '7px','margin-right': '7px','width': '76%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                 
                             
-                html.Div([dcc.Graph(id='graph111', style={'height': 230,'margin-top': '10px'})],
+                html.Div([dcc.Graph(id='graph111', style={'height': 230,'margin-top': '10px'},className='textpoint')],
                          id='test111',style={'margin-left': '7px','width': '48.4%', 'display': 'inline-block', 'vertical-align': 'middle'}),       
-                html.Div([dcc.Graph(id='graph1111', style={'height': 230,'margin-top': '10px'})],
+                html.Div([dcc.Graph(id='graph1111', style={'height': 230,'margin-top': '10px'},className='textpoint')],
                          id='test1111',style={'margin-left': '7px','margin-right': '7px','width': '48.5%', 'display': 'inline-block', 'vertical-align': 'middle'}),       
                              
                 
@@ -169,10 +192,10 @@ app.layout = html.Div([
                 ''',style={'margin-top': '0px','margin-bottom':'0px','margin-left': '7px','margin-right': '7px'}),         
                             
       
-                html.Div([dcc.Graph(id='graph11', style={'height': 230,'margin-top': '0px'})],
+                html.Div([dcc.Graph(id='graph11', style={'height': 230,'margin-top': '0px'},className='textpoint')],
                          id='test11',style={'margin-left': '7px','width': '48.4%', 'display': 'inline-block', 'vertical-align': 'middle'}),       
                             
-                html.Div([dcc.Graph(id='graph41', style={'height': 230,'margin-top': '0px'})],
+                html.Div([dcc.Graph(id='graph41', style={'height': 230,'margin-top': '0px'},className='textpoint')],
                          id='test41',style={'margin-left': '7px','margin-right': '7px','width': '48.5%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                             
                 dcc.Markdown('''
@@ -198,7 +221,7 @@ app.layout = html.Div([
                 
                 ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),              
                                    
-                html.Div([dcc.Graph(id='graph12', style={'height': 400,'margin-top': '10px'})],
+                html.Div([dcc.Graph(id='graph12', style={'height': 460,'margin-top': '10px'},className='textpoint')],
                          style={'margin-left': '7px','margin-right': '7px','width': '97.5%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                     
                 html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
@@ -229,7 +252,7 @@ app.layout = html.Div([
                             
                 html.Div([
                     dcc.Slider(id='slid1',min=0,max=60,step=1,updatemode='mouseup',marks={x: '{} days'.format(x) for x in range(0,61,10)},value=60,className='margin10'),              
-                    dcc.Graph(id='graph14', style={'height': 400,'margin-top': '10px'})],
+                    dcc.Graph(id='graph14', style={'height': 400,'margin-top': '10px'},className='textpoint')],
                          style={'margin-left': '7px','margin-right': '7px','width': '97.5%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                     
                                                     
@@ -242,8 +265,11 @@ app.layout = html.Div([
                 I hereby disclaim any and all representations and warranties with respect to the web-app, including accuracy, fitness for use, and merchantability. 
                 Reliance on the web-app for medical guidance or use of the web-app in commerce is strictly prohibited._
                  
-                _*If you have any questions or comments, please contact Louis du Plessis @ <louis@du-plessis.fr> or connect with me on LinkedIn [here](https://www.linkedin.com/in/louis-du-plessis-de-gren%C3%A9dan-01a860196/)._
-                ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),        
+                _*If you have any questions or comments, please contact me @ <louis@du-plessis.fr> , connect with me on [LinkedIn](https://www.linkedin.com/in/louis-du-plessis-de-gren%C3%A9dan-01a860196/) or [Github](https://github.com/loulouOz/)._
+                ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}), 
+                    
+                html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
+                                              'backgroundColor': '#e5ebf0','margin-top': '30px','margin-bottom': '10px'}),
                  
                   ]),                                                     
                                                                      
@@ -257,10 +283,10 @@ app.layout = html.Div([
                                 'margin-right': '0px','width': '100%', 'vertical-align': 'middle','backgroundColor': '#D8E0E5','margin-top': '0px','margin-bottom': '7px'}),                                                      
                                           
                     html.Div([
-                    html.Img(alt="logo", src='data:image/png;base64,{}'.format(base64.b64encode(open('logo.png', 'rb').read()).decode()),
+                    html.Img(alt="coronavirus covid-19", src='data:image/png;base64,{}'.format(base64.b64encode(open('logo.png', 'rb').read()).decode()),
                              style={'margin-left':'7px','width': '40px','height': '40px','vertical-align': 'middle','margin-top':'80px','display': 'inline-block'}),
                                                                      
-                    html.H1('Map of COVID-19 Cases',style={'display': 'inline-block','margin-left':'7px','vertical-align': 'middle','color':'black','margin-top':'95px'}),
+                    html.H1('COVID-19 - Analytics & Forecasting',style={'display': 'inline-block','margin-left':'7px','vertical-align': 'middle','color':'black','margin-top':'95px'}),
                         ],style={'display': 'inline-block','vertical-align': 'middle','margin-bottom':'10px'}),
                                                                      
                 dcc.Markdown('''
@@ -269,7 +295,7 @@ app.layout = html.Div([
                 
                 _*Use mouse (or finger on mobile) and highlight/select a region in the graphs to zoom into details. Double tap on graph to reset your action._  
                 _*For best viewing experience, please use Chrome or Firefox._   
-                ''',style={'margin-top': '0px','margin-bottom':'5px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                                                      
+                ''',style={'margin-top': '0px','margin-bottom':'0px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                                                      
                                                                      
                 ###############                                                     
                 html.A([html.Img(id='body-image2', alt="news covid19", src='data:image/png;base64,{}'.format(base64.b64encode(open('virus.png', 'rb').read()).decode()),
@@ -279,7 +305,7 @@ app.layout = html.Div([
                             
                             
                 html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
-                                'backgroundColor': '#D8E0E5','margin-top': '10px','margin-bottom': '10px'}),                                                      
+                                'backgroundColor': '#D8E0E5','margin-top': '0px','margin-bottom': '5px'}),                                                      
                               
                 dcc.Dropdown(id='country1',style={'width': '32.5%','margin-bottom': '4px','display': 'inline-block','position': 'fixed','left':'8px','top':'50px',
                                                   'background':'lightgrey','color':'black','z-index': '9999999'},multi=True,placeholder="Select a country..."),
@@ -299,13 +325,14 @@ app.layout = html.Div([
                 dcc.RadioItems(id="radioX",options=[{"label": "Top 5", "value": 5},{"label": "Top 15", "value": 15},
                                                     {"label": "Top 50", "value": 50},{"label": "All", "value": 55}],
                                          value=15,labelStyle={'display': 'inline-block', 'margin-left':'7px'},
-                               style={"padding": "10px",'margin-left': '7px','display': 'inline-block'}),             
-                                       
+                               style={"padding": "5px",'margin-left': '7px','display': 'inline-block'})
+                    ],id='slidX1',style={'width': '49%','display': 'inline-block'}),
+                html.Div([                        
                 dcc.Markdown('''**Sort graph:** ''',style={'margin-left': '10px','display': 'inline-block'}),
                 dcc.RadioItems(id="radioX3",options=[{"label": "Cumulative cases", "value": 1},{"label": "Per million people", "value": 2}],
                                value=1,labelStyle={'display': 'inline-block', 'margin-left':'7px'},
-                               style={"padding": "10px",'margin-left': '7px','display': 'inline-block'})
-                ],style={'width': '99%'}),
+                               style={"padding": "5px",'margin-left': '7px','display': 'inline-block'})
+                    ],id='slidX2',style={'width': '49%','display': 'inline-block'}),
                             
                 html.Div([
                     html.Div([dcc.Graph(id='kpi00', style={'height': 110,'margin-top': '0px','font-size':'1.5rem'})]),
@@ -316,7 +343,7 @@ app.layout = html.Div([
                                
                                          
                 html.Div([
-                    dcc.Graph(id='graph2', style={'height': 470,'margin-top': '10px'})],
+                    dcc.Graph(id='graph2', style={'height': 470,'margin-top': '10px'},className='textpoint')],
                     id='test3',style={'margin-left': '7px','margin-right': '7px','width': '76%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                 
                 
@@ -343,7 +370,7 @@ app.layout = html.Div([
                                style={"padding": "10px", "max-width": "800px", 'margin-left': '7px','display': 'inline-block'}),            
                             
                 html.Div([
-                    dcc.Graph(id='graph21', style={'height': 510,'margin-top': '10px'})],
+                    dcc.Graph(id='graph21', style={'height': 510,'margin-top': '10px'},className='textpoint')],
                          style={'margin-left': '7px','margin-right': '7px','width': '97.5%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                 
                             
@@ -357,8 +384,11 @@ app.layout = html.Div([
                 I hereby disclaim any and all representations and warranties with respect to the web-app, including accuracy, fitness for use, and merchantability. 
                 Reliance on the web-app for medical guidance or use of the web-app in commerce is strictly prohibited._
                  
-                _*If you have any questions or comments, please contact Louis du Plessis @ <louis@du-plessis.fr> or connect with me on LinkedIn [here](https://www.linkedin.com/in/louis-du-plessis-de-gren%C3%A9dan-01a860196/)._
-                ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                                                     
+                _*If you have any questions or comments, please contact me @ <louis@du-plessis.fr> , connect with me on [LinkedIn](https://www.linkedin.com/in/louis-du-plessis-de-gren%C3%A9dan-01a860196/) or [Github](https://github.com/loulouOz/)._
+                ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),  
+                            
+                html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
+                                              'backgroundColor': '#e5ebf0','margin-top': '30px','margin-bottom': '10px'}),
                                                                      
                             
                 ]),
@@ -374,10 +404,10 @@ app.layout = html.Div([
                                 'margin-right': '0px','width': '100%', 'vertical-align': 'middle','backgroundColor': '#D8E0E5','margin-top': '0px','margin-bottom': '7px'}),                                                      
                                       
                     html.Div([
-                    html.Img(alt="logo", src='data:image/png;base64,{}'.format(base64.b64encode(open('logo.png', 'rb').read()).decode()),
+                    html.Img(alt="coronavirus covid-19", src='data:image/png;base64,{}'.format(base64.b64encode(open('logo.png', 'rb').read()).decode()),
                              style={'margin-left':'7px','width': '40px','height': '40px','vertical-align': 'middle','margin-top':'80px','display': 'inline-block'}),
                                                                      
-                    html.H1('Map of COVID-19 Cases',style={'display': 'inline-block','margin-left':'7px','vertical-align': 'middle','color':'black','margin-top':'95px'}),
+                    html.H1('COVID-19 - Analytics & Forecasting',style={'display': 'inline-block','margin-left':'7px','vertical-align': 'middle','color':'black','margin-top':'95px'}),
                         ],style={'display': 'inline-block','vertical-align': 'middle','margin-bottom':'10px'}),
                                                                      
                                                                      
@@ -388,7 +418,7 @@ app.layout = html.Div([
                 
                 _*Use mouse (or finger on mobile) and highlight/select a region in the graphs to zoom into details. Double tap on graph to reset your action._  
                 _*For best viewing experience, please use Chrome or Firefox._  
-                ''',style={'margin-top': '0px','margin-bottom':'5px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                                                      
+                ''',style={'margin-top': '0px','margin-bottom':'0px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                                                      
                                                                      
                 
                 ###############                                                     
@@ -399,7 +429,7 @@ app.layout = html.Div([
                             
                             
                 html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
-                                'backgroundColor': '#D8E0E5','margin-top': '10px','margin-bottom': '10px'}),                                                      
+                                'backgroundColor': '#D8E0E5','margin-top': '0px','margin-bottom': '5px'}),                                                      
                               
                 dcc.Dropdown(id='country2',style={'width': '32.5%','margin-bottom': '4px','display': 'inline-block','position': 'fixed','left':'8px','top':'50px',
                                                   'background':'lightgrey','color':'black','z-index': '9999999'},multi=True,placeholder="Select a country..."),
@@ -421,7 +451,7 @@ app.layout = html.Div([
                     ],id='test4',style={'margin-top': '10px','margin-left': '7px','display': 'inline-block', 'vertical-align': 'top','width': '21%'}),
                                                                                                                                  
                 html.Div([
-                    dcc.Graph(id='graph3', style={'height': 470,'margin-top': '10px'})],
+                    dcc.Graph(id='graph3', style={'height': 470,'margin-top': '10px'},className='textpoint')],
                     id='test5',style={'margin-left': '7px','margin-right': '7px','width': '76%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                          
                 html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
@@ -433,14 +463,14 @@ app.layout = html.Div([
                 Displays the new daily cases - Confirmed, Recovered, Deaths - for each country for the specific day you have selected above on the slider.
                 ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),             
                 
-                dcc.Markdown('''Countries to display:  ''',style={'margin-left': '40px','display': 'inline-block'}),
+                dcc.Markdown('''**Countries to display:**  ''',style={'margin-left': '40px','display': 'inline-block'}),
                 dcc.RadioItems(id="radioX2",options=[{"label": "Top 5", "value": 5},{"label": "Top 15", "value": 15},
                                                      {"label": "Top 50", "value": 50},{"label": "All", "value": 55}],
                                          value=15,labelStyle={'display': 'inline-block', 'margin-left':'7px'},
                                style={"padding": "10px",'margin-left': '7px','display': 'inline-block'}),             
                             
                 html.Div([
-                    dcc.Graph(id='graph4', style={'height': 510,'margin-top': '10px'})],
+                    dcc.Graph(id='graph4', style={'height': 510,'margin-top': '10px'},className='textpoint')],
                          style={'margin-left': '7px','margin-right': '7px','width': '97.5%', 'display': 'inline-block', 'vertical-align': 'middle'}),
                     
                             
@@ -453,8 +483,11 @@ app.layout = html.Div([
                 I hereby disclaim any and all representations and warranties with respect to the web-app, including accuracy, fitness for use, and merchantability. 
                 Reliance on the web-app for medical guidance or use of the web-app in commerce is strictly prohibited._
                  
-                _*If you have any questions or comments, please contact Louis du Plessis @ <louis@du-plessis.fr> or connect with me on LinkedIn [here](https://www.linkedin.com/in/louis-du-plessis-de-gren%C3%A9dan-01a860196/)._
-                ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),                        
+                _*If you have any questions or comments, please contact me @ <louis@du-plessis.fr> , connect with me on [LinkedIn](https://www.linkedin.com/in/louis-du-plessis-de-gren%C3%A9dan-01a860196/) or [Github](https://github.com/loulouOz/)._
+                ''',style={'margin-top': '30px','margin-left': '7px','margin-right': '7px','vertical-align': 'top'}),  
+                            
+                html.Div([html.H5('')],style={'margin-left': '7px','margin-right': '7px','width': '99%', 'display': 'inline-block', 'vertical-align': 'middle',
+                                              'backgroundColor': '#e5ebf0','margin-top': '30px','margin-bottom': '10px'}),
                                                                                                                       
 
                  ]),
@@ -926,7 +959,7 @@ def clean_data(select, select1, select2, click):
     
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='#f2f5f7',margin={'l': 7, 'b': 15, 't': 40, 'r': 7},title='Cumulative cases over time:',
                       autosize=True,showlegend = True,hovermode='x',legend_orientation="h",legend=dict(x=0, y=1.08),#y=1.1
-                      xaxis=dict(showspikes=True,showgrid=False),yaxis=dict(title='Nbr of cumulative cases',showspikes=True,showgrid=False))
+                      xaxis=dict(showspikes=True,showgrid=False),yaxis=dict(title='Cumulative cases',showspikes=True,showgrid=False))
     
     return fig
 
@@ -1125,7 +1158,7 @@ def clean_data(select, select1, select2, click):
         
     fig.update_layout(title='Daily cases growth factor: (better if < 1 )',legend_orientation="h",legend=dict(x=0, y=1.08),
                   plot_bgcolor='rgba(0,0,0,0)',margin={'l': 7, 'b': 15, 't': 40, 'r': 7},
-                  paper_bgcolor='#f2f5f7',xaxis=dict(showspikes=True,showgrid=False),yaxis=dict(showspikes=True,showgrid=False,range=[0,2]),)
+                  paper_bgcolor='#f2f5f7',xaxis=dict(showspikes=True,showgrid=False),yaxis=dict(title='Daily growth factor',showspikes=True,showgrid=False,range=[0,2]),)
         
     return fig
 
@@ -1201,7 +1234,7 @@ def clean_data(select, select1, select2, click):
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)',title='Projections of {} cumulative cases:'.format(namy),
                       paper_bgcolor='#f2f5f7',margin={'l': 7, 'b': 15, 't': 40, 'r': 7},showlegend = True,hovermode='x',
                       legend_orientation="h",legend=dict(x=0, y=1.08),xaxis=dict(showspikes=True,showgrid=False),
-                      yaxis=dict(showspikes=True,showgrid=False))
+                      yaxis=dict(title='Cumulative cases',showspikes=True,showgrid=False))
     
     return fig
 
@@ -1284,7 +1317,7 @@ def clean_data(select, select1, select2, click):
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)',title='Projections of {} daily cases:'.format(namy),
                       paper_bgcolor='#f2f5f7',margin={'l': 7, 'b': 15, 't': 40, 'r': 7},
                       showlegend = True,hovermode='x',legend_orientation="h",legend=dict(x=0, y=1.08),
-                      xaxis=dict(showspikes=True,showgrid=False),yaxis=dict(showspikes=True,showgrid=False))
+                      xaxis=dict(showspikes=True,showgrid=False),yaxis=dict(title='Daily cases',showspikes=True,showgrid=False))
     return fig
 
 
@@ -1351,16 +1384,27 @@ def clean_data(select, select1, select2, click):
     
     fig = go.Figure()
     
-    for i in dicto.keys():
+    colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52',
+             '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52',
+             '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52',
+             '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52',
+             '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52',
+             '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52']
+    for i,j in zip(dicto.keys(),range(len(dicto.keys()))):
         if len(dicto[i]) >= 1:
-            fig.add_trace(go.Scatter(x=list(range(1,len(dicto['China'])+1)), y=dicto[i],mode='lines+markers',name=i, marker=dict(size=5),
+            fig.add_trace(go.Scatter(x=list(range(1,len(dicto['China'])+1)), y=dicto[i],mode='lines',name=i, #marker=dict(size=5),
                                      text=['{:,} cases, {:.02f}% increase'.format(x,dictos[i][y]) if y > 0 else '{:,} cases'.format(x)  for x,y in zip(dicto[i],range(0,len(dictos[i])))],
-                                     line=dict(shape='spline', smoothing=1.3),hovertemplate ='%{text}',))
+                                     line=dict(shape='spline', smoothing=1.3,color=colors[j]),hovertemplate ='%{text}',))
+            
+            fig.add_trace(go.Scatter(x=[len(dicto[i])], y=[dicto[i][-1]],mode='markers+text', marker=dict(size=8,color=colors[j]),
+                                     text=i, textposition="middle right",hoverinfo="skip",
+                                     textfont=dict(color=colors[j]),
+                                    ))
 
     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='#f2f5f7',
                       margin={'l': 7, 'b': 20, 't': 80, 'r': 7},title='{} cases - Tracking the evolution of countries once they hit 50 {} cases:'.format(dt['conf'].unique()[0],namy),
-                      showlegend = True,hovermode='x',legend_orientation="h",legend=dict(x=0, y=1.08),
-                      xaxis1=dict(showticklabels=True,showgrid=False,title='days'),yaxis1=dict(type='log',showgrid=False,title='log'))
+                      showlegend = False,hovermode='x',legend_orientation="h",legend=dict(x=0, y=1.08),
+                      xaxis1=dict(showticklabels=True,showgrid=False,title='days'),yaxis1=dict(type='log',showgrid=False,title='Cumulative cases, log'))
 
     listu = [50,287678]
     fig.add_trace(go.Scatter(x=[1,34], y=listu,text="30% daily increase",hovertemplate="30% daily increase",mode='lines',line = dict(color='black', width=2, dash='dash'),opacity=0.4,name=''))
@@ -1429,7 +1473,7 @@ def clean_data(select, val1):
                       margin={'l': 7, 'b': 20, 't': 80, 'r': 7},title='Modelling',showlegend = True,hovermode='x',
                       legend_orientation="h",legend=dict(x=0, y=1.08),
                       xaxis=dict(title='Days',showgrid=False),
-                      yaxis=dict(title='Number cases',showgrid=False))
+                      yaxis=dict(title='Cumulative cases',showgrid=False))
     return fig
 
 ################################################
@@ -1644,7 +1688,7 @@ def clean_data(select, select1, value,radio,radioX):
         opa2 = [0.4 if x not in select else 1 for x in df333['Country/Region']]
         opa3 = [0.4 if x not in select else 1 for x in df444['Country/Region']]
     
-    fig = make_subplots(rows=3, cols=1) #, shared_yaxes=True)
+    fig = make_subplots(rows=3, cols=1)
 
     fig.add_trace(go.Bar(x=df222['Country/Region'], y=df222['Recovery Rate'],name='Recovery Rate',
                          text=['{0:.1f}%'.format(x) for x in df222['Recovery Rate']],hovertemplate='%{text}',
