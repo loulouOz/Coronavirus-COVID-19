@@ -11,5 +11,3 @@ I hope you find it informative.
 Thanks to Johns Hopkins University for making the inital data publicly available.
 
 Comments and feedback welcomed. (and if you know better ways to increase the loading performance, please let me know!)
-
-**This project was also a good personnal development as it was my first web-app which help me developed my CSS, HTML, JS and overall web development skills which are not my area at all. I tried to optimise the loading performance of the app as much as I could as well as the python script.**
